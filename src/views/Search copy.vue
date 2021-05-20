@@ -3,8 +3,6 @@
     <v-container>
       <h1 class="text-h5 text-center mt-5">Orchestrations</h1>
 
-      <!-- LOADING WHEN WAITING FOR ORCHESTRATIONS LIST  -->
-
       <v-row v-if="!items.length">
         <v-col class="center mt-5">
           <v-progress-circular
@@ -13,10 +11,6 @@
           ></v-progress-circular>
         </v-col>
       </v-row>
-
-      <!-- END OF LOADING WHEN WAITING FOR ORCHESTRATIONS LIST  -->
-
-      <!-- ORCHESTRATION LIST SELECT FORM -->
 
       <v-form v-if="items.length">
         <v-select
@@ -30,11 +24,6 @@
           >Go</v-btn
         >
       </v-form>
-
-      <!-- END OF ORCHESTRATION LIST SELECT FORM -->
-
-      <!-- LOADING WHEN WAITING FOR RESPONSE  -->
-
       <v-row v-if="loadingResponse">
         <v-col class="center mt-5">
           <v-progress-circular
@@ -43,11 +32,6 @@
           ></v-progress-circular>
         </v-col>
       </v-row>
-
-      <!-- END OF LOADING WHEN WAITING FOR RESPONSE  -->
-
-      <!-- ORCHESTRATION INPUTS FORM -->
-
       <v-form class="mt-5" v-if="formDisplayed">
         <v-text-field
           v-for="input in inputsList"
@@ -55,13 +39,9 @@
           :label="input.name"
           v-model="input.value"
         ></v-text-field>
-        <v-btn color="primary" width="100%" @click="validate">Validate</v-btn>
+        <v-btn color="primary" width="100%" @click="validate">Validate </v-btn>
       </v-form>
       <p v-if="result" class="mt-5 text-center">{{ result }}</p>
-
-      <!-- END OF ORCHESTRATION INPUTS FORM -->
-
-      <!-- ERROR MESSAGE -->
 
       <v-card v-if="errors" class="pa-5 mt-5 text-center errorBox" outlined>
         <div>
@@ -71,9 +51,6 @@
         </div>
       </v-card>
 
-      <!-- END OF ERROR MESSAGE -->
-
-      <!-- SUCCESS MESSAGE -->
       <v-card
         outlined
         class="pa-5 text-center mt-5 successBox"
@@ -84,8 +61,6 @@
           <p>{{ key }}: {{ resValues[key] }}</p>
         </div>
       </v-card>
-
-      <!-- END OF SUCCESS MESSAGE -->
     </v-container>
   </v-app>
 </template>
@@ -112,7 +87,6 @@ export default {
       formDisplayed: false,
     };
   },
-
   methods: {
     displayForm() {
       this.resValues = false;
@@ -137,22 +111,14 @@ export default {
         inputs: this.inputsList,
       };
       let resFetch;
-
-      try {
-        resFetch = await axios.post(
-          "https://wpg56h4p10.execute-api.us-east-1.amazonaws.com/production/",
-          config
-        );
-      } catch (error) {
-        console.log("there was an error", error);
-      }
+      resFetch = await axios.post(
+        "https://wpg56h4p10.execute-api.us-east-1.amazonaws.com/production/",
+        config
+      );
 
       const keys = [];
 
-      console.log(resFetch);
-
       if (resFetch.data.ais_data["Errors/Warnings"]) {
-        console.log("inside the first IF");
         this.errors = true;
         this.errorCode =
           resFetch.data.ais_data["Errors/Warnings"][0]["Errors"][0].CODE;
@@ -175,9 +141,7 @@ export default {
       this.loadingResponse = false;
     },
   },
-
   async mounted() {
-    /* When mounted, fetch all orchestrations */
     const config = {
       route: "discover",
     };
@@ -185,13 +149,11 @@ export default {
       "https://wpg56h4p10.execute-api.us-east-1.amazonaws.com/production/",
       config
     );
-
     const list = responseOrchsList.data.ais_data.orchestrations;
     for (let i = 0; i < list.length; i++) {
       this.orchsList.push(list[i]);
       this.items.push(list[i].name);
     }
-    console.log(this.items);
   },
 };
 </script>
