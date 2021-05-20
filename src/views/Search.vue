@@ -5,7 +5,7 @@
 
       <!-- LOADING WHEN WAITING FOR ORCHESTRATIONS LIST  -->
 
-      <v-row v-if="!items.length">
+      <v-row v-if="!listOfOrchsByName.length">
         <v-col class="center mt-5">
           <v-progress-circular
             indeterminate
@@ -18,11 +18,11 @@
 
       <!-- ORCHESTRATION LIST SELECT FORM -->
 
-      <v-form v-if="items.length">
+      <v-form v-if="listOfOrchsByName.length">
         <v-select
           v-model="selectedOrch"
           class="mt-5"
-          :items="items"
+          :items="listOfOrchsByName"
           label="Select an orchestration"
           outlined
         ></v-select>
@@ -35,7 +35,7 @@
 
       <!-- LOADING WHEN WAITING FOR RESPONSE  -->
 
-      <v-row v-if="loadingResponse">
+      <v-row v-if="loadingResponseFromValidate">
         <v-col class="center mt-5">
           <v-progress-circular
             indeterminate
@@ -57,7 +57,6 @@
         ></v-text-field>
         <v-btn color="primary" width="100%" @click="validate">Validate</v-btn>
       </v-form>
-      <p v-if="result" class="mt-5 text-center">{{ result }}</p>
 
       <!-- END OF ORCHESTRATION INPUTS FORM -->
 
@@ -96,40 +95,71 @@ import axios from "axios";
 export default {
   data() {
     return {
+      /* Holds the orchestration selected */
       selectedOrch: null,
-      items: [],
-      orchsList: [],
-      orchForm: false,
+      /* Holds the orchestrations list that will be displayed in the select menu */
+      listOfOrchsByName: [],
+      /* Holds all the orchestrations fetched from the API */
+      orchs: [],
+      /* Holds the list of inputs to be displayed in the form */
       inputsList: [],
+      /* Holds the inputs from the orchestration object */
       inputs: [],
-      result: null,
+      /* Toggles "errors" display */
       errors: false,
+      /* Holds error code */
       errorCode: "",
+      /* Holds error description */
       errorDescription: "",
-      loadingResponse: false,
+      /* Toggles loading spinning for response from validate */
+      loadingResponseFromValidate: false,
+      /* Holds success response values */
       resValues: null,
+      /* Holds success response keys */
       resKeys: null,
+      /* Toggles display of form */
       formDisplayed: false,
     };
   },
 
   methods: {
     displayForm() {
+      /* 
+        - Clear success display
+        - Clear errors display
+        - Clear the list of inputs to be displayed in the form
+        - Clear the array of inputs
+        - Select the particular orchestration selected by the user
+        - Populate "inputsList" with the inputs from the selected orchestration
+        - Display the form
+      */
       this.resValues = false;
       this.errors = false;
       this.inputsList = [];
-      this.formDisplayed = true;
-      const found = this.orchsList.find((elem) => {
+      this.inputs = [];
+
+      const found = this.orchs.find((elem) => {
         return elem.name === this.selectedOrch;
       });
-      this.inputs = [];
+
       for (let i = 0; i < found.inputs.length; i++) {
         this.inputsList.push({ name: found.inputs[i].name });
       }
+      this.formDisplayed = true;
     },
     async validate() {
-      this.loadingResponse = true;
+      /*
+      - Hide form
+      - Display the spinning loading while fetching the response from validate
+      - Define config for fetching response (with the inputs provided by user)
+      - Fetch response from "execute"
+      - Define array variable "keys"
+      - If fetch response contains Errors/Warning, display errors card and displays error code and error description.
+      - Otherwise, display success card with the keys and content for success
+
+      */
       this.formDisplayed = false;
+      this.loadingResponseFromValidate = true;
 
       const config = {
         route: "orchestration",
@@ -167,12 +197,11 @@ export default {
             keys.push(key);
           }
         }
-
         this.resKeys = keys;
         this.resValues = resFetch.data.ais_data;
       }
 
-      this.loadingResponse = false;
+      this.loadingResponseFromValidate = false;
     },
   },
 
@@ -188,10 +217,10 @@ export default {
 
     const list = responseOrchsList.data.ais_data.orchestrations;
     for (let i = 0; i < list.length; i++) {
-      this.orchsList.push(list[i]);
-      this.items.push(list[i].name);
+      this.orchs.push(list[i]);
+      this.listOfOrchsByName.push(list[i].name);
     }
-    console.log(this.items);
+    console.log(this.orchs);
   },
 };
 </script>
